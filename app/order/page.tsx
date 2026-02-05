@@ -10,6 +10,7 @@ function OrderPageContent() {
   const activityId = searchParams.get('activityId');
 
   const [activity, setActivity] = useState<MealActivity | null>(null);
+  const [activities, setActivities] = useState<MealActivity[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,16 +21,23 @@ function OrderPageContent() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!activityId) {
-      setLoading(false);
-      return;
-    }
     loadData();
   }, [activityId]);
 
   const loadData = async () => {
     setLoading(true);
     try {
+      // 如果沒有 activityId,載入活動列表
+      if (!activityId) {
+        const actRes = await fetch('/api/activities');
+        const actData = await actRes.json();
+        if (actData.success) {
+          setActivities(actData.data);
+        }
+        setLoading(false);
+        return;
+      }
+
       // 載入活動資訊
       const actRes = await fetch(`/api/activities?id=${activityId}`);
       const actData = await actRes.json();
@@ -125,10 +133,33 @@ function OrderPageContent() {
   if (!activityId) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="card max-w-md w-full text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">請選擇活動</h2>
-          <p className="text-gray-600 mb-6">請從管理員頁面選擇一個活動進行點餐</p>
-          <Link href="/admin" className="btn-primary inline-block">
+        <div className="card max-w-md w-full">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">請選擇活動</h2>
+          <p className="text-gray-600 mb-6 text-center">請從管理員頁面選擇一個活動進行點餐</p>
+          
+          {/* 顯示可用活動列表 */}
+          {loading ? (
+            <div className="text-center py-4 text-gray-500">載入中...</div>
+          ) : activities.length === 0 ? (
+            <p className="text-center text-gray-500 mb-4">目前沒有可用的活動</p>
+          ) : (
+            <div className="space-y-3 mb-6">
+              {activities
+                .filter(act => act.status === 'active')
+                .map((activity) => (
+                  <Link
+                    key={activity.id}
+                    href={`/order?activityId=${activity.id}`}
+                    className="block p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
+                  >
+                    <div className="font-bold text-gray-900">{activity.name}</div>
+                    <div className="text-sm text-gray-600">日期: {activity.date}</div>
+                  </Link>
+                ))}
+            </div>
+          )}
+          
+          <Link href="/admin" className="btn-secondary w-full text-center">
             前往管理員頁面
           </Link>
         </div>
