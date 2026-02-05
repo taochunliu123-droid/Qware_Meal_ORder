@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateReport } from '@/lib/db';
 
+// 標記為動態路由
+export const dynamic = 'force-dynamic';
+
 // GET: 生成指定活動的報表
 export async function GET(request: NextRequest) {
   try {

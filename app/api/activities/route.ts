@@ -7,6 +7,9 @@ import {
   deleteActivity,
 } from '@/lib/db';
 
+// 標記為動態路由
+export const dynamic = 'force-dynamic';
+
 // GET: 取得所有活動或單一活動
 export async function GET(request: NextRequest) {
   try {

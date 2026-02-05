@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { initializeDefaultEmployees } from '@/lib/db';
 
+// 標記為動態路由
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     await initializeDefaultEmployees();

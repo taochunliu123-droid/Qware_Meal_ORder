@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEmployees, addEmployee, updateEmployee, deleteEmployee } from '@/lib/db';
 
+// 標記為動態路由
+export const dynamic = 'force-dynamic';
+
 // GET: 取得所有員工
 export async function GET() {
   try {

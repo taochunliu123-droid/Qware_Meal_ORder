@@ -6,6 +6,9 @@ import {
   deleteOrder,
 } from '@/lib/db';
 
+// 標記為動態路由
+export const dynamic = 'force-dynamic';
+
 // GET: 取得指定活動的所有訂單
 export async function GET(request: NextRequest) {
   try {
