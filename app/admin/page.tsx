@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { MealActivity, Employee } from '@/types';
 
 export default function AdminPage() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState<'activities' | 'employees'>('activities');
   const [activities, setActivities] = useState<MealActivity[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -21,9 +25,22 @@ export default function AdminPage() {
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [employeeName, setEmployeeName] = useState('');
 
+  // 檢查登入狀態
   useEffect(() => {
-    loadData();
-  }, [activeTab]);
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      router.push('/admin/login');
+    } else {
+      setIsAuthenticated(true);
+      setCheckingAuth(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [activeTab, isAuthenticated]);
 
   const loadData = async () => {
     setLoading(true);
@@ -203,6 +220,29 @@ export default function AdminPage() {
     setDrinks(drinks.filter((_, i) => i !== index));
   };
 
+  const handleLogout = () => {
+    if (confirm('確定要登出嗎?')) {
+      localStorage.removeItem('admin_token');
+      router.push('/admin/login');
+    }
+  };
+
+  // 檢查身份驗證中
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl text-gray-600">驗證中...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // 未登入,不顯示任何內容 (會被 redirect 到登入頁)
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -212,9 +252,17 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold text-gray-900">管理員後台</h1>
             <p className="text-gray-600 mt-1">管理點餐活動與員工名單</p>
           </div>
-          <Link href="/" className="btn-secondary">
-            返回首頁
-          </Link>
+          <div className="flex gap-3">
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium"
+            >
+              登出
+            </button>
+            <Link href="/" className="btn-secondary">
+              返回首頁
+            </Link>
+          </div>
         </div>
 
         {/* 頁籤 */}

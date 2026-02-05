@@ -67,7 +67,9 @@ vercel --prod
 
 3. **設定環境變數**
    - 在專案設定頁面,前往 **Settings** → **Environment Variables**
-   - 新增 `REDIS_URL` 變數(從你的 Redis Database 取得)
+   - 新增以下變數:
+     - `REDIS_URL` (從 Redis Database 取得)
+     - `ADMIN_PASSWORD` (設定管理員密碼,例如: `MySecurePass123!`)
 
 4. **部署**
    - 點擊 **Deploy**
@@ -149,13 +151,17 @@ jobs:
 
 ```
 REDIS_URL="redis://default:xxxxx@xxxxx.upstash.io:6379"
+ADMIN_PASSWORD="your_secure_password"
 ```
 
 ### 生產環境
 
 在 Vercel Dashboard 設定:
 1. 前往 **Settings** → **Environment Variables**
-2. 為 `Production`, `Preview`, 和 `Development` 分別設定
+2. 新增以下變數:
+   - `REDIS_URL`: Redis 連線 URL
+   - `ADMIN_PASSWORD`: 管理員密碼 (請使用強密碼)
+3. 為 `Production`, `Preview`, 和 `Development` 分別設定
 
 ## 自訂網域
 
@@ -250,9 +256,18 @@ import Image from 'next/image';
 
 ## 安全性建議
 
-1. **不要公開分享管理員頁面連結**
-2. **定期備份報表資料**
-3. **考慮加入身份驗證** (未來版本)
+1. **設定強密碼**
+   - 使用至少 12 位字元的密碼
+   - 包含大小寫字母、數字和特殊符號
+   - 定期更換密碼
+
+2. **保護管理員密碼**
+   - 不要在程式碼中寫死密碼
+   - 只透過環境變數設定
+   - 不要分享給非管理員
+
+3. **定期備份報表資料**
+
 4. **使用環境變數保護敏感資訊**
 
 ## 疑難排解

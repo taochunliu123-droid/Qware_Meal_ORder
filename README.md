@@ -56,6 +56,16 @@ cp .env.example .env.local
 4. 選擇你建立的 Redis Database
 5. 複製 `REDIS_URL` 環境變數到 `.env.local`
 
+### 4. 設定管理員密碼
+
+在 `.env.local` 加入:
+
+```
+ADMIN_PASSWORD="your_secure_password"
+```
+
+**重要:** 請務必修改預設密碼!
+
 ### 4. 啟動開發伺服器
 
 ```bash
@@ -64,7 +74,14 @@ npm run dev
 
 開啟 [http://localhost:3000](http://localhost:3000) 查看應用。
 
-### 5. 初始化預設員工
+### 5. 登入管理員後台
+
+1. 訪問 [http://localhost:3000/admin](http://localhost:3000/admin)
+2. 會自動跳轉到登入頁面
+3. 輸入你在 `.env.local` 設定的 `ADMIN_PASSWORD`
+4. 登入成功後即可管理系統
+
+### 6. 初始化預設員工
 
 首次啟動後,前往 [http://localhost:3000/admin](http://localhost:3000/admin) 頁面,系統會自動初始化 31 位預設員工。
 
@@ -94,7 +111,11 @@ vercel
 
 ### 管理員操作
 
-1. **建立活動**
+1. **登入系統**
+   - 訪問 `/admin`
+   - 輸入管理員密碼登入
+
+2. **建立活動**
    - 進入管理員頁面
    - 點擊「建立新活動」
    - 輸入活動名稱、日期
@@ -205,14 +226,18 @@ Order {
 
 ### 安全性
 
-目前版本沒有身份驗證,建議:
-- 不要分享管理員頁面連結
+目前版本使用簡單的密碼驗證:
+- 管理員密碼存在環境變數 `ADMIN_PASSWORD`
+- 登入後 token 存在 localStorage
+- **請務必設定強密碼**
+- 不要分享管理員密碼
 - 點餐連結只分享給內部人員
 - 活動結束後關閉狀態
 
 ## 未來改進
 
-- [ ] 加入身份驗證(Google OAuth)
+- [x] 管理員密碼保護
+- [ ] 更強的身份驗證(JWT, OAuth)
 - [ ] 支援圖片上傳(餐點照片)
 - [ ] 訂單修改功能
 - [ ] 即時通知(Telegram Bot)
