@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { MealActivity, Employee, Order } from '@/types';
 
-export default function OrderPage() {
+function OrderPageContent() {
   const searchParams = useSearchParams();
   const activityId = searchParams.get('activityId');
 
@@ -309,5 +309,19 @@ export default function OrderPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl text-gray-600">載入中...</div>
+        </div>
+      </div>
+    }>
+      <OrderPageContent />
+    </Suspense>
   );
 }
