@@ -28,7 +28,7 @@
 
 - **前端框架**: Next.js 14 (App Router)
 - **樣式**: Tailwind CSS
-- **資料庫**: Vercel KV (Redis)
+- **資料庫**: Redis (Vercel Redis)
 - **部署**: Vercel
 - **語言**: TypeScript
 
@@ -48,17 +48,13 @@ npm install
 cp .env.example .env.local
 ```
 
-### 3. 設定 Vercel KV
+### 3. 設定 Redis
 
 1. 前往 [Vercel Dashboard](https://vercel.com/dashboard)
 2. 選擇你的專案
 3. 前往 Storage 頁面
-4. 建立新的 KV Database
-5. 複製環境變數到 `.env.local`:
-   - `KV_URL`
-   - `KV_REST_API_URL`
-   - `KV_REST_API_TOKEN`
-   - `KV_REST_API_READ_ONLY_TOKEN`
+4. 選擇你建立的 Redis Database
+5. 複製 `REDIS_URL` 環境變數到 `.env.local`
 
 ### 4. 啟動開發伺服器
 
@@ -126,12 +122,12 @@ vercel
 
 ## 資料結構
 
-### Vercel KV 儲存結構
+### Redis 儲存結構
 
 ```
-employees: Employee[]           # 員工列表
-activities: MealActivity[]      # 活動列表
-orders:{activityId}: Order[]    # 各活動的訂單
+employees: Employee[]           # 員工列表 (JSON string)
+activities: MealActivity[]      # 活動列表 (JSON string)
+orders:{activityId}: Order[]    # 各活動的訂單 (JSON string)
 ```
 
 ### 資料型別
@@ -194,15 +190,15 @@ Order {
 
 ## 注意事項
 
-### Vercel KV 限制
+### Redis 限制
 
-- 免費方案: 256 MB 儲存空間
-- 每月 3000 次請求
+- 免費方案根據 Vercel 計畫而定
+- 建議查看 Vercel Dashboard 的使用量
 - 如果超過限制,請升級方案
 
 ### 資料備份
 
-建議定期匯出報表備份,Vercel KV 資料可能因為以下原因遺失:
+建議定期匯出報表備份,Redis 資料可能因為以下原因遺失:
 - 超過儲存限制
 - 手動刪除
 - 方案到期

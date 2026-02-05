@@ -9,25 +9,22 @@
 - ✅ 有 [GitHub](https://github.com) 帳號(建議)
 - ✅ 專案程式碼已準備好
 
-### 2. 建立 Vercel KV 資料庫
+### 2. 建立 Redis 資料庫
 
 #### 方法一: 透過 Vercel Dashboard
 
 1. 登入 [Vercel Dashboard](https://vercel.com/dashboard)
 2. 點擊 **Storage** 標籤
 3. 點擊 **Create Database**
-4. 選擇 **KV**
-5. 輸入資料庫名稱(例如: `meal-order-db`)
+4. 選擇 **Redis**
+5. 輸入資料庫名稱(例如: `meal-order-redis`)
 6. 選擇區域(建議選擇離你最近的區域)
 7. 點擊 **Create**
 
 #### 方法二: 透過 Vercel CLI
 
 ```bash
-vercel env add KV_URL
-vercel env add KV_REST_API_URL
-vercel env add KV_REST_API_TOKEN
-vercel env add KV_REST_API_READ_ONLY_TOKEN
+vercel env add REDIS_URL
 ```
 
 ### 3. 部署專案
@@ -70,25 +67,21 @@ vercel --prod
 
 3. **設定環境變數**
    - 在專案設定頁面,前往 **Settings** → **Environment Variables**
-   - 新增以下變數(從你的 KV Database 取得):
-     - `KV_URL`
-     - `KV_REST_API_URL`
-     - `KV_REST_API_TOKEN`
-     - `KV_REST_API_READ_ONLY_TOKEN`
+   - 新增 `REDIS_URL` 變數(從你的 Redis Database 取得)
 
 4. **部署**
    - 點擊 **Deploy**
    - 等待建置完成
 
-### 4. 連接 KV Database 到專案
+### 4. 連接 Redis Database 到專案
 
-如果你先建立了專案再建立 KV Database:
+如果你先建立了專案再建立 Redis Database:
 
 1. 前往專案的 **Storage** 標籤
 2. 點擊 **Connect Store**
-3. 選擇你剛建立的 KV Database
+3. 選擇你剛建立的 Redis Database
 4. 點擊 **Connect**
-5. Vercel 會自動設定環境變數
+5. Vercel 會自動設定 `REDIS_URL` 環境變數
 
 ### 5. 初始化資料
 
@@ -155,10 +148,7 @@ jobs:
 在 `.env.local` 設定:
 
 ```
-KV_URL="your_kv_url"
-KV_REST_API_URL="your_rest_api_url"
-KV_REST_API_TOKEN="your_token"
-KV_REST_API_READ_ONLY_TOKEN="your_readonly_token"
+REDIS_URL="redis://default:xxxxx@xxxxx.upstash.io:6379"
 ```
 
 ### 生產環境
@@ -183,21 +173,22 @@ KV_REST_API_READ_ONLY_TOKEN="your_readonly_token"
 3. 點擊最新的部署
 4. 查看 **Build Logs** 和 **Runtime Logs**
 
-### 查看 KV 資料
+### 查看 Redis 資料
 
 1. 前往 **Storage** 標籤
-2. 選擇你的 KV Database
+2. 選擇你的 Redis Database
 3. 使用 **Data Browser** 查看資料
 
 ### 常見錯誤
 
-#### 錯誤 1: 無法連接 KV
+#### 錯誤 1: 無法連接 Redis
 
 **原因**: 環境變數設定錯誤
 
 **解決方案**:
-1. 檢查環境變數是否正確設定
-2. 重新部署專案
+1. 檢查 `REDIS_URL` 環境變數是否正確設定
+2. 確認格式: `redis://default:password@host:port`
+3. 重新部署專案
 
 #### 錯誤 2: 建置失敗
 
@@ -245,17 +236,17 @@ import Image from 'next/image';
 
 ## 成本估算
 
-### Vercel KV 免費方案限制
+### Vercel Redis 免費方案限制
 
-- 儲存空間: 256 MB
-- 每月請求: 3,000 次
-- 資料傳輸: 1 GB
+根據你的 Vercel 計畫而定,建議查看:
+- Vercel Dashboard → Storage → 你的 Redis Database
+- 查看目前使用量和限制
 
 ### 建議使用情境
 
-- **小型團隊** (< 50 人): 免費方案足夠
-- **中型團隊** (50-200 人): 考慮 Pro 方案 ($20/月)
-- **大型團隊** (> 200 人): 考慮 Enterprise 方案
+- **小型團隊** (< 50 人): 免費方案應該足夠
+- **中型團隊** (50-200 人): 需要評估使用量
+- **大型團隊** (> 200 人): 建議升級 Vercel 計畫
 
 ## 安全性建議
 
@@ -270,7 +261,7 @@ import Image from 'next/image';
 
 1. 查看 [Vercel 文件](https://vercel.com/docs)
 2. 查看 [Next.js 文件](https://nextjs.org/docs)
-3. 查看 [Vercel KV 文件](https://vercel.com/docs/storage/vercel-kv)
+3. 查看 [Vercel Storage 文件](https://vercel.com/docs/storage)
 4. 提交 Issue 到專案 GitHub
 
 ---

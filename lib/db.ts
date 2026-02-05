@@ -1,10 +1,13 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
 import { Employee, MealActivity, Order, OrderReport } from '@/types';
+
+// 初始化 Redis 客戶端
+const redis = new Redis(process.env.REDIS_URL || '');
 
 // ============ 員工管理 ============
 export async function getEmployees(): Promise<Employee[]> {
-  const employees = await kv.get<Employee[]>('employees');
-  return employees || [];
+  const data = await redis.get('employees');
+  return data ? JSON.parse(data) : [];
 }
 
 export async function addEmployee(name: string): Promise<Employee> {
@@ -15,7 +18,7 @@ export async function addEmployee(name: string): Promise<Employee> {
     createdAt: new Date().toISOString(),
   };
   employees.push(newEmployee);
-  await kv.set('employees', employees);
+  await redis.set('employees', JSON.stringify(employees));
   return newEmployee;
 }
 
@@ -25,7 +28,7 @@ export async function updateEmployee(id: string, name: string): Promise<Employee
   if (index === -1) return null;
   
   employees[index].name = name;
-  await kv.set('employees', employees);
+  await redis.set('employees', JSON.stringify(employees));
   return employees[index];
 }
 
@@ -34,14 +37,14 @@ export async function deleteEmployee(id: string): Promise<boolean> {
   const filtered = employees.filter(emp => emp.id !== id);
   if (filtered.length === employees.length) return false;
   
-  await kv.set('employees', filtered);
+  await redis.set('employees', JSON.stringify(filtered));
   return true;
 }
 
 // ============ 活動管理 ============
 export async function getActivities(): Promise<MealActivity[]> {
-  const activities = await kv.get<MealActivity[]>('activities');
-  return activities || [];
+  const data = await redis.get('activities');
+  return data ? JSON.parse(data) : [];
 }
 
 export async function getActivity(id: string): Promise<MealActivity | null> {
@@ -75,7 +78,7 @@ export async function createActivity(data: {
   };
   
   activities.push(newActivity);
-  await kv.set('activities', activities);
+  await redis.set('activities', JSON.stringify(activities));
   return newActivity;
 }
 
@@ -89,7 +92,7 @@ export async function updateActivityStatus(
   
   activities[index].status = status;
   activities[index].updatedAt = new Date().toISOString();
-  await kv.set('activities', activities);
+  await redis.set('activities', JSON.stringify(activities));
   return activities[index];
 }
 
@@ -99,8 +102,8 @@ export async function deleteActivity(id: string): Promise<boolean> {
   if (filtered.length === activities.length) return false;
   
   // 同時刪除該活動的所有訂單
-  await kv.del(`orders:${id}`);
-  await kv.set('activities', filtered);
+  await redis.del(`orders:${id}`);
+  await redis.set('activities', JSON.stringify(filtered));
   return true;
 }
 
@@ -123,13 +126,13 @@ export async function createOrder(data: {
   };
   
   orders.push(newOrder);
-  await kv.set(`orders:${data.activityId}`, orders);
+  await redis.set(`orders:${data.activityId}`, JSON.stringify(orders));
   return newOrder;
 }
 
 export async function getOrdersByActivity(activityId: string): Promise<Order[]> {
-  const orders = await kv.get<Order[]>(`orders:${activityId}`);
-  return orders || [];
+  const data = await redis.get(`orders:${activityId}`);
+  return data ? JSON.parse(data) : [];
 }
 
 export async function updateOrder(
@@ -151,7 +154,7 @@ export async function updateOrder(
     ...data,
   };
   
-  await kv.set(`orders:${activityId}`, orders);
+  await redis.set(`orders:${activityId}`, JSON.stringify(orders));
   return orders[index];
 }
 
@@ -160,7 +163,7 @@ export async function deleteOrder(activityId: string, orderId: string): Promise<
   const filtered = orders.filter(order => order.id !== orderId);
   if (filtered.length === orders.length) return false;
   
-  await kv.set(`orders:${activityId}`, filtered);
+  await redis.set(`orders:${activityId}`, JSON.stringify(filtered));
   return true;
 }
 
@@ -222,5 +225,5 @@ export async function initializeDefaultEmployees(): Promise<void> {
     createdAt: new Date().toISOString(),
   }));
   
-  await kv.set('employees', newEmployees);
+  await redis.set('employees', JSON.stringify(newEmployees));
 }
