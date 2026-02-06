@@ -215,28 +215,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteActivity = async (id: string) => {
-    if (!confirm('確定要刪除此活動嗎?相關訂單也會一併刪除!')) return;
-    
-    try {
-      const res = await fetch(`/api/activities?id=${id}`, {
-        method: 'DELETE',
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        alert('刪除成功');
-        loadData();
-      } else {
-        alert(data.error || '刪除失敗');
-      }
-    } catch (error) {
-      console.error('刪除活動失敗:', error);
-      alert('刪除活動失敗');
-    }
-  };
-
   const handleToggleActivityStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'closed' : 'active';
     
