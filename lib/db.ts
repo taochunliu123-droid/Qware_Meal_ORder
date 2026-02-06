@@ -96,6 +96,48 @@ export async function updateActivityStatus(
   return activities[index];
 }
 
+export async function updateActivity(
+  id: string,
+  data: {
+    name?: string;
+    date?: string;
+    meals?: string[];
+    drinks?: string[];
+  }
+): Promise<MealActivity | null> {
+  const activities = await getActivities();
+  const index = activities.findIndex(act => act.id === id);
+  if (index === -1) return null;
+  
+  const activity = activities[index];
+  
+  // 更新名稱和日期
+  if (data.name) activity.name = data.name;
+  if (data.date) activity.date = data.date;
+  
+  // 更新餐點選項
+  if (data.meals && data.meals.length > 0) {
+    activity.meals = data.meals.map((name, idx) => ({
+      id: `meal_${Date.now()}_${idx}`,
+      name,
+    }));
+  }
+  
+  // 更新飲料選項
+  if (data.drinks && data.drinks.length > 0) {
+    activity.drinks = data.drinks.map((name, idx) => ({
+      id: `drink_${Date.now()}_${idx}`,
+      name,
+    }));
+  }
+  
+  activity.updatedAt = new Date().toISOString();
+  activities[index] = activity;
+  
+  await redis.set('activities', JSON.stringify(activities));
+  return activity;
+}
+
 export async function deleteActivity(id: string): Promise<boolean> {
   const activities = await getActivities();
   const filtered = activities.filter(act => act.id !== id);

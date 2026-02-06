@@ -4,6 +4,7 @@ import {
   getActivity,
   createActivity,
   updateActivityStatus,
+  updateActivity,
   deleteActivity,
 } from '@/lib/db';
 
@@ -83,32 +84,67 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH: 更新活動狀態
+// PATCH: 更新活動狀態或內容
 export async function PATCH(request: NextRequest) {
   try {
-    const { id, status } = await request.json();
+    const body = await request.json();
+    const { id, status, name, date, meals, drinks } = body;
     
-    if (!id || !status || !['active', 'closed'].includes(status)) {
+    if (!id) {
       return NextResponse.json(
-        { success: false, error: '參數不正確' },
+        { success: false, error: '缺少活動 ID' },
         { status: 400 }
       );
     }
     
-    const activity = await updateActivityStatus(id, status);
-    
-    if (!activity) {
-      return NextResponse.json(
-        { success: false, error: '活動不存在' },
-        { status: 404 }
-      );
+    // 如果有 status 參數,更新狀態
+    if (status) {
+      if (!['active', 'closed'].includes(status)) {
+        return NextResponse.json(
+          { success: false, error: '狀態不正確' },
+          { status: 400 }
+        );
+      }
+      
+      const activity = await updateActivityStatus(id, status);
+      
+      if (!activity) {
+        return NextResponse.json(
+          { success: false, error: '活動不存在' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({ success: true, data: activity });
     }
     
-    return NextResponse.json({ success: true, data: activity });
-  } catch (error) {
-    console.error('更新活動狀態失敗:', error);
+    // 如果有 name, date, meals, drinks 參數,更新活動內容
+    if (name || date || meals || drinks) {
+      const activity = await updateActivity(id, {
+        name: name?.trim(),
+        date: date?.trim(),
+        meals: meals?.filter((m: string) => m.trim() !== ''),
+        drinks: drinks?.filter((d: string) => d.trim() !== ''),
+      });
+      
+      if (!activity) {
+        return NextResponse.json(
+          { success: false, error: '活動不存在' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({ success: true, data: activity });
+    }
+    
     return NextResponse.json(
-      { success: false, error: '更新活動狀態失敗' },
+      { success: false, error: '缺少更新參數' },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error('更新活動失敗:', error);
+    return NextResponse.json(
+      { success: false, error: '更新活動失敗' },
       { status: 500 }
     );
   }

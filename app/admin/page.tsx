@@ -21,6 +21,10 @@ export default function AdminPage() {
   const [meals, setMeals] = useState<string[]>(['']);
   const [drinks, setDrinks] = useState<string[]>(['']);
   
+  // 編輯活動
+  const [showEditActivityForm, setShowEditActivityForm] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<MealActivity | null>(null);
+  
   // 新增員工表單
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [employeeName, setEmployeeName] = useState('');
@@ -134,6 +138,80 @@ export default function AdminPage() {
     } catch (error) {
       console.error('新增員工失敗:', error);
       alert('新增員工失敗');
+    }
+  };
+
+  const handleDeleteActivity = async (id: string) => {
+    if (!confirm('確定要刪除此活動嗎?相關訂單也會一併刪除!')) return;
+    
+    try {
+      const res = await fetch(`/api/activities?id=${id}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('刪除成功');
+        loadData();
+      } else {
+        alert(data.error || '刪除失敗');
+      }
+    } catch (error) {
+      console.error('刪除活動失敗:', error);
+      alert('刪除活動失敗');
+    }
+  };
+
+  const handleOpenEditActivity = (activity: MealActivity) => {
+    setEditingActivity(activity);
+    setActivityName(activity.name);
+    setActivityDate(activity.date);
+    setMeals(activity.meals.map(m => m.name));
+    setDrinks(activity.drinks.map(d => d.name));
+    setShowEditActivityForm(true);
+  };
+
+  const handleUpdateActivity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingActivity) return;
+    
+    const validMeals = meals.filter(m => m.trim() !== '');
+    const validDrinks = drinks.filter(d => d.trim() !== '');
+    
+    if (validMeals.length === 0 || validDrinks.length === 0) {
+      alert('至少需要一個餐點和一個飲料選項');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/activities', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingActivity.id,
+          name: activityName,
+          date: activityDate,
+          meals: validMeals,
+          drinks: validDrinks,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('活動更新成功!');
+        setShowEditActivityForm(false);
+        setEditingActivity(null);
+        resetActivityForm();
+        loadData();
+      } else {
+        alert(data.error || '更新失敗');
+      }
+    } catch (error) {
+      console.error('更新活動失敗:', error);
+      alert('更新活動失敗');
     }
   };
 
@@ -335,7 +413,13 @@ export default function AdminPage() {
                           <span>飲料: {activity.drinks.length} 項</span>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => handleOpenEditActivity(activity)}
+                          className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium text-sm"
+                        >
+                          編輯選項
+                        </button>
                         <Link
                           href={`/order?activityId=${activity.id}`}
                           className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium text-sm"
@@ -585,6 +669,149 @@ export default function AdminPage() {
                   onClick={() => {
                     setShowEmployeeForm(false);
                     setEmployeeName('');
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  取消
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 編輯活動彈窗 */}
+      {showEditActivityForm && editingActivity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">編輯活動選項</h2>
+            <form onSubmit={handleUpdateActivity}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  活動名稱
+                </label>
+                <input
+                  type="text"
+                  value={activityName}
+                  onChange={(e) => setActivityName(e.target.value)}
+                  className="input-field"
+                  required
+                  placeholder="例如: 02/06 聚餐"
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  日期
+                </label>
+                <input
+                  type="text"
+                  value={activityDate}
+                  onChange={(e) => setActivityDate(e.target.value)}
+                  className="input-field"
+                  required
+                  placeholder="例如: 2025-02-06"
+                />
+              </div>
+
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    餐點選項 (最多 10 個)
+                  </label>
+                  {meals.length < 10 && (
+                    <button
+                      type="button"
+                      onClick={addMealField}
+                      className="text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      + 新增餐點
+                    </button>
+                  )}
+                </div>
+                {meals.map((meal, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={meal}
+                      onChange={(e) => {
+                        const newMeals = [...meals];
+                        newMeals[index] = e.target.value;
+                        setMeals(newMeals);
+                      }}
+                      className="input-field flex-1"
+                      placeholder={`餐點 ${index + 1}`}
+                    />
+                    {meals.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMealField(index)}
+                        className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                      >
+                        刪除
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    飲料選項 (最多 10 個)
+                  </label>
+                  {drinks.length < 10 && (
+                    <button
+                      type="button"
+                      onClick={addDrinkField}
+                      className="text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      + 新增飲料
+                    </button>
+                  )}
+                </div>
+                {drinks.map((drink, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={drink}
+                      onChange={(e) => {
+                        const newDrinks = [...drinks];
+                        newDrinks[index] = e.target.value;
+                        setDrinks(newDrinks);
+                      }}
+                      className="input-field flex-1"
+                      placeholder={`飲料 ${index + 1}`}
+                    />
+                    {drinks.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeDrinkField(index)}
+                        className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                      >
+                        刪除
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-yellow-800">
+                  ⚠️ <strong>注意:</strong> 編輯選項不會影響已點的訂單,但會影響新的點餐。
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button type="submit" className="btn-primary flex-1">
+                  儲存變更
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditActivityForm(false);
+                    setEditingActivity(null);
+                    resetActivityForm();
                   }}
                   className="btn-secondary flex-1"
                 >
