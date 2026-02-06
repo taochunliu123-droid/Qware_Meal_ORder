@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     
     if (hasOrdered) {
       return NextResponse.json(
-        { success: false, error: '您已經點過餐了,請使用修改功能' },
+        { success: false, error: '您已經點過餐了,請使用更新功能修改訂單' },
         { status: 400 }
       );
     }

@@ -19,6 +19,10 @@ function OrderPageContent() {
   const [selectedMeal, setSelectedMeal] = useState('');
   const [selectedDrink, setSelectedDrink] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  
+  // 編輯模式
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingOrderId, setEditingOrderId] = useState('');
 
   useEffect(() => {
     loadData();
@@ -65,6 +69,45 @@ function OrderPageContent() {
     setLoading(false);
   };
 
+  const handleDeleteOrder = async () => {
+    if (!confirm('確定要刪除您的訂單嗎?')) return;
+    
+    if (!editingOrderId || !activityId) return;
+    
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/orders?activityId=${activityId}&orderId=${editingOrderId}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('訂單已刪除');
+        setSelectedEmployee('');
+        setSelectedMeal('');
+        setSelectedDrink('');
+        setIsEditing(false);
+        setEditingOrderId('');
+        loadData();
+      } else {
+        alert(data.error || '刪除失敗');
+      }
+    } catch (error) {
+      console.error('刪除失敗:', error);
+      alert('刪除失敗');
+    }
+    setSubmitting(false);
+  };
+
+  const handleCancelEdit = () => {
+    setSelectedEmployee('');
+    setSelectedMeal('');
+    setSelectedDrink('');
+    setIsEditing(false);
+    setEditingOrderId('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -84,40 +127,95 @@ function OrderPageContent() {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          activityId,
-          employeeId: employee.id,
-          employeeName: employee.name,
-          mealId: meal.id,
-          mealName: meal.name,
-          drinkId: drink.id,
-          drinkName: drink.name,
-        }),
-      });
+      if (isEditing) {
+        // 修改訂單
+        const res = await fetch('/api/orders', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            activityId,
+            orderId: editingOrderId,
+            mealId: meal.id,
+            mealName: meal.name,
+            drinkId: drink.id,
+            drinkName: drink.name,
+          }),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (data.success) {
-        alert('點餐成功!');
-        setSelectedEmployee('');
-        setSelectedMeal('');
-        setSelectedDrink('');
-        loadData();
+        if (data.success) {
+          alert('訂單修改成功!');
+          setSelectedEmployee('');
+          setSelectedMeal('');
+          setSelectedDrink('');
+          setIsEditing(false);
+          setEditingOrderId('');
+          loadData();
+        } else {
+          alert(data.error || '修改失敗');
+        }
       } else {
-        alert(data.error || '點餐失敗');
+        // 新增訂單
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            activityId,
+            employeeId: employee.id,
+            employeeName: employee.name,
+            mealId: meal.id,
+            mealName: meal.name,
+            drinkId: drink.id,
+            drinkName: drink.name,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          alert('點餐成功!');
+          setSelectedEmployee('');
+          setSelectedMeal('');
+          setSelectedDrink('');
+          loadData();
+        } else {
+          alert(data.error || '點餐失敗');
+        }
       }
     } catch (error) {
-      console.error('點餐失敗:', error);
-      alert('點餐失敗');
+      console.error('操作失敗:', error);
+      alert('操作失敗');
     }
     setSubmitting(false);
   };
 
   const hasOrdered = (employeeId: string) => {
     return orders.some(order => order.employeeId === employeeId);
+  };
+
+  const getUserOrder = (employeeId: string) => {
+    return orders.find(order => order.employeeId === employeeId);
+  };
+
+  const handleEmployeeChange = (employeeId: string) => {
+    setSelectedEmployee(employeeId);
+    
+    // 檢查該員工是否已點餐
+    const existingOrder = getUserOrder(employeeId);
+    if (existingOrder) {
+      // 自動填入已點的餐點
+      setIsEditing(true);
+      setEditingOrderId(existingOrder.id);
+      setSelectedMeal(existingOrder.mealId);
+      setSelectedDrink(existingOrder.drinkId);
+    } else {
+      // 清空選擇
+      setIsEditing(false);
+      setEditingOrderId('');
+      setSelectedMeal('');
+      setSelectedDrink('');
+    }
   };
 
   if (loading) {
@@ -223,7 +321,7 @@ function OrderPageContent() {
                 </label>
                 <select
                   value={selectedEmployee}
-                  onChange={(e) => setSelectedEmployee(e.target.value)}
+                  onChange={(e) => handleEmployeeChange(e.target.value)}
                   className="input-field"
                   required
                 >
@@ -232,13 +330,17 @@ function OrderPageContent() {
                     <option
                       key={employee.id}
                       value={employee.id}
-                      disabled={hasOrdered(employee.id)}
                     >
                       {employee.name}
-                      {hasOrdered(employee.id) ? ' (已點餐)' : ''}
+                      {hasOrdered(employee.id) ? ' (已點餐 - 可修改)' : ''}
                     </option>
                   ))}
                 </select>
+                {isEditing && (
+                  <p className="mt-2 text-sm text-blue-600">
+                    ℹ️ 您已點過餐,可以修改或刪除訂單
+                  </p>
+                )}
               </div>
 
               {/* 選擇餐點 */}
@@ -299,13 +401,43 @@ function OrderPageContent() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="btn-primary w-full py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting ? '送出中...' : '確認送出'}
-              </button>
+              {/* 按鈕區域 */}
+              {isEditing ? (
+                <div className="space-y-3">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="btn-primary w-full py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? '更新中...' : '更新訂單'}
+                  </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={handleDeleteOrder}
+                      disabled={submitting}
+                      className="btn-danger py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      刪除訂單
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="btn-secondary py-2"
+                    >
+                      取消
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn-primary w-full py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? '送出中...' : '確認送出'}
+                </button>
+              )}
             </form>
           </div>
 
