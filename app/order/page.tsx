@@ -18,6 +18,7 @@ function OrderPageContent() {
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [selectedMeal, setSelectedMeal] = useState('');
   const [selectedDrink, setSelectedDrink] = useState('');
+  const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   
   // 編輯模式
@@ -87,6 +88,7 @@ function OrderPageContent() {
         setSelectedEmployee('');
         setSelectedMeal('');
         setSelectedDrink('');
+        setNote('');
         setIsEditing(false);
         setEditingOrderId('');
         loadData();
@@ -104,6 +106,7 @@ function OrderPageContent() {
     setSelectedEmployee('');
     setSelectedMeal('');
     setSelectedDrink('');
+    setNote('');
     setIsEditing(false);
     setEditingOrderId('');
   };
@@ -139,6 +142,7 @@ function OrderPageContent() {
             mealName: meal.name,
             drinkId: drink.id,
             drinkName: drink.name,
+            note: note.trim().slice(0, 10), // 限制 10 字元
           }),
         });
 
@@ -149,6 +153,7 @@ function OrderPageContent() {
           setSelectedEmployee('');
           setSelectedMeal('');
           setSelectedDrink('');
+          setNote('');
           setIsEditing(false);
           setEditingOrderId('');
           loadData();
@@ -168,6 +173,7 @@ function OrderPageContent() {
             mealName: meal.name,
             drinkId: drink.id,
             drinkName: drink.name,
+            note: note.trim().slice(0, 10), // 限制 10 字元
           }),
         });
 
@@ -178,6 +184,7 @@ function OrderPageContent() {
           setSelectedEmployee('');
           setSelectedMeal('');
           setSelectedDrink('');
+          setNote('');
           loadData();
         } else {
           alert(data.error || '點餐失敗');
@@ -209,12 +216,14 @@ function OrderPageContent() {
       setEditingOrderId(existingOrder.id);
       setSelectedMeal(existingOrder.mealId);
       setSelectedDrink(existingOrder.drinkId);
+      setNote(existingOrder.note || '');
     } else {
       // 清空選擇
       setIsEditing(false);
       setEditingOrderId('');
       setSelectedMeal('');
       setSelectedDrink('');
+      setNote('');
     }
   };
 
@@ -401,6 +410,29 @@ function OrderPageContent() {
                 </div>
               </div>
 
+              {/* 備註欄位 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  備註 (選填,最多 10 字元)
+                </label>
+                <input
+                  type="text"
+                  value={note}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= 10) {
+                      setNote(value);
+                    }
+                  }}
+                  className="input-field"
+                  placeholder="例如:不要辣、多冰..."
+                  maxLength={10}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {note.length}/10 字元
+                </p>
+              </div>
+
               {/* 按鈕區域 */}
               {isEditing ? (
                 <div className="space-y-3">
@@ -463,6 +495,11 @@ function OrderPageContent() {
                     <div className="text-sm text-gray-600">
                       <div>🍱 {order.mealName}</div>
                       <div>🥤 {order.drinkName}</div>
+                      {order.note && (
+                        <div className="mt-1 text-orange-600">
+                          📝 {order.note}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

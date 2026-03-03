@@ -39,6 +39,7 @@ export interface Order {
   mealName: string;
   drinkId: string;
   drinkName: string;
+  note?: string; // 備註 (最多 10 字元)
   createdAt: string;
 }
 

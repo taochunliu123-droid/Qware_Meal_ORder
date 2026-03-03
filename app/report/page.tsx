@@ -80,7 +80,11 @@ function ReportPageContent() {
     report.orders.forEach((order, index) => {
       text += `${index + 1}. ${order.employeeName}\n`;
       text += `   餐點: ${order.mealName}\n`;
-      text += `   飲料: ${order.drinkName}\n\n`;
+      text += `   飲料: ${order.drinkName}\n`;
+      if (order.note) {
+        text += `   備註: ${order.note}\n`;
+      }
+      text += `\n`;
     });
 
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -262,6 +266,7 @@ function ReportPageContent() {
                       <th className="text-left py-3 px-4 font-bold text-gray-700">姓名</th>
                       <th className="text-left py-3 px-4 font-bold text-gray-700">餐點</th>
                       <th className="text-left py-3 px-4 font-bold text-gray-700">飲料</th>
+                      <th className="text-left py-3 px-4 font-bold text-gray-700">備註</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -273,6 +278,13 @@ function ReportPageContent() {
                         </td>
                         <td className="py-3 px-4 text-gray-700">{order.mealName}</td>
                         <td className="py-3 px-4 text-gray-700">{order.drinkName}</td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {order.note ? (
+                            <span className="text-orange-600">📝 {order.note}</span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

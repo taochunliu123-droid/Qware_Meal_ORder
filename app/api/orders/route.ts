@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       mealName,
       drinkId,
       drinkName,
+      note,
     } = await request.json();
     
     // 驗證必填欄位
@@ -83,6 +84,7 @@ export async function POST(request: NextRequest) {
       mealName: mealName.trim(),
       drinkId,
       drinkName: drinkName.trim(),
+      note: note ? note.trim().slice(0, 10) : '',
     });
     
     return NextResponse.json({ success: true, data: order });
@@ -105,6 +107,7 @@ export async function PUT(request: NextRequest) {
       mealName,
       drinkId,
       drinkName,
+      note,
     } = await request.json();
     
     if (
@@ -126,6 +129,7 @@ export async function PUT(request: NextRequest) {
       mealName: mealName.trim(),
       drinkId,
       drinkName: drinkName.trim(),
+      note: note !== undefined ? note.trim().slice(0, 10) : undefined,
     });
     
     if (!order) {

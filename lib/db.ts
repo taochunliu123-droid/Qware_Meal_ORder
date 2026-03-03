@@ -158,12 +158,14 @@ export async function createOrder(data: {
   mealName: string;
   drinkId: string;
   drinkName: string;
+  note?: string;
 }): Promise<Order> {
   const orders = await getOrdersByActivity(data.activityId);
   
   const newOrder: Order = {
     id: `order_${Date.now()}`,
     ...data,
+    note: data.note || '',
     createdAt: new Date().toISOString(),
   };
   
@@ -185,6 +187,7 @@ export async function updateOrder(
     mealName: string;
     drinkId: string;
     drinkName: string;
+    note?: string;
   }
 ): Promise<Order | null> {
   const orders = await getOrdersByActivity(activityId);
@@ -194,6 +197,7 @@ export async function updateOrder(
   orders[index] = {
     ...orders[index],
     ...data,
+    note: data.note !== undefined ? data.note : orders[index].note,
   };
   
   await redis.set(`orders:${activityId}`, JSON.stringify(orders));
